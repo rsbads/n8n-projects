@@ -1,0 +1,281 @@
+{
+  "name": "Pipeline de inventário",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "996b717f-3701-48ec-b4da-270c8f590c60",
+      "name": "Executar ao clicar"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1ab42141-e9c9-467e-9e1c-246b836cba1f",
+              "name": "id_planilha",
+              "value": "1TmNphRlnN80H35uXKhL7e_tTHMh9CvOhhaKT-6oQ6bw",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "96ee95d7-9df3-419d-985d-674376fa8dd1",
+      "name": "ID planilha"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1TmNphRlnN80H35uXKhL7e_tTHMh9CvOhhaKT-6oQ6bw",
+          "mode": "list",
+          "cachedResultName": "Inventário de Produto",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TmNphRlnN80H35uXKhL7e_tTHMh9CvOhhaKT-6oQ6bw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Inventário",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TmNphRlnN80H35uXKhL7e_tTHMh9CvOhhaKT-6oQ6bw/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        0
+      ],
+      "id": "335c29a1-f77f-45b6-a5bc-33c72afb2ca9",
+      "name": "Buscar linhas de inventário",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Mly3KeBHW73FSztD",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "Categoria"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "c166c933-e6eb-471a-8f5c-75bd533b5d61",
+      "name": "Organizar por ordem alfbética na categoria"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "=produtos",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        832,
+        0
+      ],
+      "id": "0d6fbdd5-1bfb-4888-a5ba-5994d1ddda0f",
+      "name": "Agregar colocando na tabela produto"
+    },
+    {
+      "parameters": {
+        "jsCode": "const produtos = items[0].json.produtos;\n\n// Agrupar por categoria\nconst grupos = {};\nfor (const produto of produtos) {\n  const cat = produto.Categoria;\n  if (!grupos[cat]) {\n    grupos[cat] = { \n      Categoria: cat, \n      Total_Itens: 0, \n      Quantidade_Total: 0 \n    };\n  }\n  grupos[cat].Total_Itens += 1;\n  grupos[cat].Quantidade_Total += Number(produto.Quantidade);\n}\n\n// Converter para array de itens\nreturn Object.values(grupos).map(g => ({ json: g }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "c1c39550-cc58-40e7-9b8d-80bbc9747ff4",
+      "name": "Agruipa por categoria"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1TmNphRlnN80H35uXKhL7e_tTHMh9CvOhhaKT-6oQ6bw",
+          "mode": "list",
+          "cachedResultName": "Inventário de Produto",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TmNphRlnN80H35uXKhL7e_tTHMh9CvOhhaKT-6oQ6bw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 536584457,
+          "mode": "list",
+          "cachedResultName": "Relatório",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TmNphRlnN80H35uXKhL7e_tTHMh9CvOhhaKT-6oQ6bw/edit#gid=536584457"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "Categoria"
+          ],
+          "schema": [
+            {
+              "id": "Categoria",
+              "displayName": "Categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Total_Itens",
+              "displayName": "Total_Itens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantidade_Total",
+              "displayName": "Quantidade_Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "1adfa637-88e3-48fd-b2f0-3c0806c610be",
+      "name": "Adicionar ou atualizar linha /relatório",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Mly3KeBHW73FSztD",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Executar ao clicar": {
+      "main": [
+        [
+          {
+            "node": "ID planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ID planilha": {
+      "main": [
+        [
+          {
+            "node": "Buscar linhas de inventário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar linhas de inventário": {
+      "main": [
+        [
+          {
+            "node": "Organizar por ordem alfbética na categoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Organizar por ordem alfbética na categoria": {
+      "main": [
+        [
+          {
+            "node": "Agregar colocando na tabela produto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agregar colocando na tabela produto": {
+      "main": [
+        [
+          {
+            "node": "Agruipa por categoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agruipa por categoria": {
+      "main": [
+        [
+          {
+            "node": "Adicionar ou atualizar linha /relatório",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "21e323ec-0d29-4723-8b5f-a40e4ec1fafa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1477c3cf082fb2f9b96859bbef59cda409b7410063f680a23c26fd9628bb9300"
+  },
+  "id": "l41fLMU7Aa4D7UOx",
+  "tags": [
+    {
+      "name": "Treino",
+      "id": "ks96U52ldPBci2NA",
+      "updatedAt": "2026-05-20T06:13:50.748Z",
+      "createdAt": "2026-05-20T06:13:50.748Z"
+    }
+  ]
+}
