@@ -1,0 +1,356 @@
+{
+  "name": "Carinha do Clima",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ecf207b8-6b1d-440f-ba54-b8e69f8a3dd1",
+              "leftValue": "={{ $json['Chance de chuva'] }}",
+              "rightValue": "={{ $('Configurações').item.json.limite_chuva }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        832,
+        0
+      ],
+      "id": "e05ae4f3-e1df-46df-8ccd-95b14878f537",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "=https://wttr.in/{{ $json.cidade }}?format=j1&lang=pt",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "bf7aaa3e-d863-4332-b4cd-734ed245b4d4",
+      "name": "Wttr Recife"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3086007f-c344-4f2d-92bc-3ee2d4f93dc9",
+      "name": "7am"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aa0571c6-724d-4bdf-8fb6-ae240ef85083",
+              "name": "Cidade",
+              "value": "={{ $('Configurações').item.json.cidade }}",
+              "type": "string"
+            },
+            {
+              "id": "55fb78ec-b475-49a3-b52a-eefba0f1ee50",
+              "name": "Temperatura",
+              "value": "={{ $json.current_condition[0].temp_C }}",
+              "type": "string"
+            },
+            {
+              "id": "21403264-ae4a-44d1-84a0-91022b873b71",
+              "name": "Sensação térmica",
+              "value": "={{ $json.current_condition[0].FeelsLikeC }}",
+              "type": "string"
+            },
+            {
+              "id": "78c3f4b4-2f20-43c0-8dab-521e19e59e15",
+              "name": "Chance de chuva",
+              "value": "={{ $json.weather[0].hourly[0].chanceofrain }}",
+              "type": "string"
+            },
+            {
+              "id": "829d3307-917c-4678-8379-438c5c4c62d5",
+              "name": "Descrição",
+              "value": "={{ $json.current_condition[0].lang_pt[0].value }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "0626e230-f102-45e1-b1e5-0a10e27789da",
+      "name": "Tratamento de dados"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3b69fd46-19ca-4588-9450-d716b613d0bb",
+              "name": "Mensagem",
+              "value": "=✅ Clima ok em {{ $('Tratamento de dados').item.json['Cidade'] }}!\n☀️ Chance de chuva: {{ $('Tratamento de dados').item.json['Chance de chuva'] }}%\n🌡️ Temperatura: {{ $('Tratamento de dados').item.json.Temperatura }}°C\n👕 Sensação térmica: {{ $('Tratamento de dados').item.json['Sensação térmica'] }}°C\n📋 Condição: {{ $('Tratamento de dados').item.json.Descrição }}\n\nSem previsão de chuva. Bom dia!",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        96
+      ],
+      "id": "3ca06893-4874-4f34-b7fd-229b87e16f01",
+      "name": "Msg - abaixo de 65"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "264edf04-2057-419c-8180-e3716f1181bb",
+              "name": "Mensagem",
+              "value": "=⚠️ ALERTA DE CHUVA em {{ $('Configurações').item.json.cidade }}!\n🌧️ Chance de chuva: {{ $('Tratamento de dados').item.json['Chance de chuva'] }}%\n🌡️ Temperatura: {{ $('Tratamento de dados').item.json.Temperatura }}°C\n👕 Sensação térmica: {{ $('Tratamento de dados').item.json['Sensação térmica'] }}°C\n📋 Condição: {{ $json['Descrição'] }}\n\nLeve o guarda-chuva hoje!",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "f57ab802-13ee-40bb-a5f1-21368d3a6d09",
+      "name": "MSG - Acima de 65"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Configurações').item.json['chat id'] }}",
+        "text": "={{ $json.Mensagem }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        -96
+      ],
+      "id": "030c6442-1809-4a62-8933-40a70f03d536",
+      "name": "Enviar mensagem",
+      "webhookId": "270b233c-8b6e-47bc-8237-3cbd37176a8d",
+      "credentials": {
+        "telegramApi": {
+          "id": "yX16NnPmimugl9Wk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Configurações').item.json['chat id'] }}",
+        "text": "={{ $json.Mensagem }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        96
+      ],
+      "id": "6fb34628-890d-4578-9d59-4244b7f29c46",
+      "name": "Enviar mensagem1",
+      "webhookId": "270b233c-8b6e-47bc-8237-3cbd37176a8d",
+      "credentials": {
+        "telegramApi": {
+          "id": "yX16NnPmimugl9Wk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dfc3621f-6c9f-4706-a93a-a96e0f87d386",
+              "name": "chat id",
+              "value": "7134095817",
+              "type": "string"
+            },
+            {
+              "id": "5740f7e4-f8ae-48e3-88e7-f1b7c5ad1ebb",
+              "name": "cidade",
+              "value": "Recife",
+              "type": "string"
+            },
+            {
+              "id": "a630707b-8b38-4d89-89ce-3bd384d31a49",
+              "name": "limite_chuva",
+              "value": "65",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "eae007e0-374d-4791-b392-5f422b99fa37",
+      "name": "Configurações"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Wttr Recife": {
+      "main": [
+        [
+          {
+            "node": "Tratamento de dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7am": {
+      "main": [
+        [
+          {
+            "node": "Configurações",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "MSG - Acima de 65",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msg - abaixo de 65",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tratamento de dados": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MSG - Acima de 65": {
+      "main": [
+        [
+          {
+            "node": "Enviar mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msg - abaixo de 65": {
+      "main": [
+        [
+          {
+            "node": "Enviar mensagem1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configurações": {
+      "main": [
+        [
+          {
+            "node": "Wttr Recife",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f7d5e5fc-bf23-4d57-872d-8c86e5442f91",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1477c3cf082fb2f9b96859bbef59cda409b7410063f680a23c26fd9628bb9300"
+  },
+  "id": "HNCIou053fJHrhTw",
+  "tags": [
+    {
+      "name": "Treino",
+      "id": "ks96U52ldPBci2NA",
+      "updatedAt": "2026-05-20T06:13:50.748Z",
+      "createdAt": "2026-05-20T06:13:50.748Z"
+    }
+  ]
+}
