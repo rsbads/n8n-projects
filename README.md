@@ -32,13 +32,4 @@ Cada projeto foi construído do zero, cobrindo conceitos progressivos de automa�
 - Webhook (n8n Wait node) — fluxos com aprovação humana
 
 ---
-
-## ▶️ Como usar os workflows
-
-1. Instale o n8n localmente via Docker:
-```bash
-docker run -it --rm --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n docker.n8n.io/n8nio/n8n
-```
-2. Acesse `localhost:5678`
-3. Importe o arquivo `.json` de cada projeto em **Workflows → Import**
 4. Configure as credenciais necessárias (Telegram, Google, Gmail)
